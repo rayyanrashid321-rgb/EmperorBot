@@ -1,7 +1,8 @@
 require('dotenv').config();
 const { Client, GatewayIntentBits } = require('discord.js');
+const { QuickDB } = require('quick.db');
 const config = require('./config');
-const db = require('quick.db');
+const db = new QuickDB();
 
 const client = new Client({
   intents: [

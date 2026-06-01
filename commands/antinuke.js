@@ -1,4 +1,4 @@
-const { SlashCommandBuilder, PermissionFlagsBits, ChannelType } = require('discord.js');
+const { SlashCommandBuilder, PermissionFlagsBits, PermissionsBitField, ChannelType } = require('discord.js');
 
 module.exports = {
   data: new SlashCommandBuilder()
@@ -25,8 +25,13 @@ module.exports = {
     const member = interaction.member;
     const userId = interaction.user.id;
     const isOwner = String(client.config.owner) === String(userId) || (client.config.whitelist || []).includes(String(userId));
-    if (!member.permissions.has(PermissionFlagsBits.Administrator) && !isOwner) {
-      return interaction.reply({ content: 'You need Administrator to use this.', ephemeral: true });
+
+    const hasAdminPermission = member?.permissions?.has
+      ? member.permissions.has(PermissionFlagsBits.Administrator)
+      : new PermissionsBitField(member?.permissions || 0).has(PermissionFlagsBits.Administrator);
+
+    if (!hasAdminPermission && !isOwner) {
+      return interaction.reply({ content: 'You need Administrator to use this.', flags: 64 });
     }
 
     const sub = interaction.options.getSubcommand(false);
@@ -36,43 +41,43 @@ module.exports = {
     if (group === 'whitelist') {
       const user = interaction.options.getUser('user');
       const key = `antinuke_${guildId}_whitelist`;
-      let list = client.db.get(key) || [];
+      let list = (await client.db.get(key)) || [];
       if (sub === 'add') {
-        if (list.includes(user.id)) return interaction.reply({ content: 'User already whitelisted.', ephemeral: true });
+        if (list.includes(user.id)) return interaction.reply({ content: 'User already whitelisted.', flags: 64 });
         list.push(user.id);
-        client.db.set(key, list);
-        return interaction.reply({ content: `Added ${user.tag} to whitelist.`, ephemeral: true });
+        await client.db.set(key, list);
+        return interaction.reply({ content: `Added ${user.tag} to whitelist.`, flags: 64 });
       }
       if (sub === 'remove') {
         list = list.filter((id) => id !== user.id);
-        client.db.set(key, list);
-        return interaction.reply({ content: `Removed ${user.tag} from whitelist.`, ephemeral: true });
+        await client.db.set(key, list);
+        return interaction.reply({ content: `Removed ${user.tag} from whitelist.`, flags: 64 });
       }
     }
 
     if (sub === 'enable') {
-      client.db.set(`antinuke_${guildId}_enabled`, true);
-      return interaction.reply({ content: 'Anti-nuke enabled for this server.', ephemeral: true });
+      await client.db.set(`antinuke_${guildId}_enabled`, true);
+      return interaction.reply({ content: 'Anti-nuke enabled for this server.', flags: 64 });
     }
     if (sub === 'disable') {
-      client.db.set(`antinuke_${guildId}_enabled`, false);
-      return interaction.reply({ content: 'Anti-nuke disabled for this server.', ephemeral: true });
+      await client.db.set(`antinuke_${guildId}_enabled`, false);
+      return interaction.reply({ content: 'Anti-nuke disabled for this server.', flags: 64 });
     }
     if (sub === 'set-log') {
       const channel = interaction.options.getChannel('channel');
-      if (!channel || channel.type !== ChannelType.GuildText) return interaction.reply({ content: 'Please provide a text channel.', ephemeral: true });
-      client.db.set(`antinuke_${guildId}_logChannel`, channel.id);
-      return interaction.reply({ content: `Log channel set to ${channel}.`, ephemeral: true });
+      if (!channel || channel.type !== ChannelType.GuildText) return interaction.reply({ content: 'Please provide a text channel.', flags: 64 });
+      await client.db.set(`antinuke_${guildId}_logChannel`, channel.id);
+      return interaction.reply({ content: `Log channel set to ${channel}.`, flags: 64 });
     }
     if (sub === 'status') {
-      const enabled = client.db.get(`antinuke_${guildId}_enabled`);
-      const logChannelId = client.db.get(`antinuke_${guildId}_logChannel`);
-      const whitelist = client.db.get(`antinuke_${guildId}_whitelist`) || [];
+      const enabled = await client.db.get(`antinuke_${guildId}_enabled`);
+      const logChannelId = await client.db.get(`antinuke_${guildId}_logChannel`);
+      const whitelist = (await client.db.get(`antinuke_${guildId}_whitelist`)) || [];
       const parts = [];
       parts.push(`Enabled: ${enabled ? 'Yes' : 'No'}`);
       parts.push(`Log Channel: ${logChannelId ? `<#${logChannelId}>` : client.config.logChannel || 'Not set'}`);
       parts.push(`Whitelist: ${whitelist.length ? whitelist.map((id) => `<@${id}>`).join(', ') : 'None'}`);
-      return interaction.reply({ content: parts.join('\n'), ephemeral: true });
+      return interaction.reply({ content: parts.join('\n'), flags: 64 });
     }
 
     return interaction.reply({ content: 'Unknown subcommand.', ephemeral: true });
