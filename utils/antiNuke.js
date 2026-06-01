@@ -27,7 +27,7 @@ async function getAuditEntry(guild, type, targetId) {
 async function logAction(client, guild, message) {
   try {
     // Check per-guild log channel in DB first
-    const guildLogId = client.db.get(`antinuke_${guild.id}_logChannel`);
+    const guildLogId = await client.db.get(`antinuke_${guild.id}_logChannel`);
     let channel = null;
     if (guildLogId) {
       channel = guild.channels.cache.get(guildLogId);
@@ -46,7 +46,7 @@ async function logAction(client, guild, message) {
 async function handleEvent(client, guild, options) {
   const { type, targetId, keyPrefix, threshold, reason, eventName } = options;
   // Check if anti-nuke is disabled for this guild
-  const enabled = client.db.get(`antinuke_${guild.id}_enabled`);
+  const enabled = await client.db.get(`antinuke_${guild.id}_enabled`);
   if (enabled === false) return;
   const entry = await getAuditEntry(guild, type, targetId);
   if (!entry) return;
@@ -55,22 +55,22 @@ async function handleEvent(client, guild, options) {
   if (!executor || executor.id === client.user.id) return;
 
   // Respect global and per-guild whitelists
-  const guildWL = client.db.get(`antinuke_${guild.id}_whitelist`) || [];
+  const guildWL = (await client.db.get(`antinuke_${guild.id}_whitelist`)) || [];
   if (isWhitelisted(executor.id) || guildWL.includes(executor.id)) return;
 
   const key = `${keyPrefix}_${executor.id}`;
-  let count = client.db.get(key) || 0;
+  let count = (await client.db.get(key)) || 0;
   count += 1;
   if (count >= threshold) {
     await punish(guild, executor.id, `Anti-Nuke: ${reason}`);
-    client.db.delete(key);
+    await client.db.delete(key);
     await logAction(
       client,
       guild,
       `⚠️ ${executor.tag} (${executor.id}) was punished for ${eventName} in ${guild.name}.`
     );
   } else {
-    client.db.set(key, count);
+    await client.db.set(key, count);
     setTimeout(() => client.db.delete(key), 15000);
   }
 }

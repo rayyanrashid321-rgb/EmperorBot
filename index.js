@@ -1,8 +1,47 @@
 require('dotenv').config();
-const { Client, GatewayIntentBits } = require('discord.js');
-const { QuickDB } = require('quick.db');
+const fs = require('fs');
+const path = require('path');
+const { Client, GatewayIntentBits, Collection } = require('discord.js');
 const config = require('./config');
-const db = new QuickDB();
+
+const dbFilePath = path.join(__dirname, 'db.json');
+
+function readDb() {
+  try {
+    if (!fs.existsSync(dbFilePath)) return {};
+    const raw = fs.readFileSync(dbFilePath, 'utf8');
+    return raw ? JSON.parse(raw) : {};
+  } catch (err) {
+    return {};
+  }
+}
+
+function writeDb(data) {
+  try {
+    fs.writeFileSync(dbFilePath, JSON.stringify(data, null, 2));
+  } catch (err) {
+    console.error('Failed to write DB:', err);
+  }
+}
+
+const db = {
+  async get(key) {
+    const data = readDb();
+    return data[key];
+  },
+  async set(key, value) {
+    const data = readDb();
+    data[key] = value;
+    writeDb(data);
+    return value;
+  },
+  async delete(key) {
+    const data = readDb();
+    delete data[key];
+    writeDb(data);
+    return true;
+  },
+};
 
 const client = new Client({
   intents: [
@@ -17,8 +56,6 @@ const client = new Client({
 
 client.config = config;
 client.db = db;
-const fs = require('fs');
-const { Collection } = require('discord.js');
 
 // Load commands
 client.commands = new Collection();
