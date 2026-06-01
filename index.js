@@ -5,12 +5,6 @@ process.on('warning', (warning) => {
   }
   console.warn(warning);
 });
-process.on('warning', (warning) => {
-  if (warning.name === 'DeprecationWarning' && warning.message.includes('The ready event has been renamed to clientReady')) {
-    return;
-  }
-  console.warn(warning);
-});
 const fs = require('fs');
 const path = require('path');
 const { Client, GatewayIntentBits, Collection, EmbedBuilder } = require('discord.js');
@@ -78,6 +72,7 @@ if (fs.existsSync('./commands')) {
     if (cmd.data && cmd.execute) client.commands.set(cmd.data.name, cmd);
   }
 }
+console.log('Loaded slash commands:', [...client.commands.keys()].join(', '));
 
 // Interaction handling for slash commands
 client.on('interactionCreate', async (interaction) => {
@@ -113,7 +108,10 @@ client.on('interactionCreate', async (interaction) => {
 
   if (!interaction.isChatInputCommand()) return;
   const command = client.commands.get(interaction.commandName);
-  if (!command) return;
+  if (!command) {
+    console.warn(`Slash command not loaded: ${interaction.commandName}`);
+    return interaction.reply({ content: 'This command is not available right now.', flags: 64 }).catch(() => {});
+  }
   try {
     await command.execute(client, interaction);
   } catch (err) {
