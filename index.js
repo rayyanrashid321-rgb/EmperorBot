@@ -129,6 +129,7 @@ client.on('interactionCreate', async (interaction) => {
 // Load events
 const eventMappings = [
   { name: 'clientReady', file: 'ready' },
+  { name: 'guildMemberAdd', file: 'guildMemberAdd' },
   { name: 'guildBanAdd', file: 'guildBanAdd' },
   { name: 'guildMemberRemove', file: 'guildMemberRemove' },
   { name: 'channelDelete', file: 'channelDelete' },
