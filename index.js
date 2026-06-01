@@ -1,7 +1,7 @@
 require('dotenv').config();
 const fs = require('fs');
 const path = require('path');
-const { Client, GatewayIntentBits, Collection } = require('discord.js');
+const { Client, GatewayIntentBits, Collection, EmbedBuilder } = require('discord.js');
 const config = require('./config');
 
 const dbFilePath = path.join(__dirname, 'db.json');
@@ -69,6 +69,36 @@ if (fs.existsSync('./commands')) {
 
 // Interaction handling for slash commands
 client.on('interactionCreate', async (interaction) => {
+  if (interaction.isButton()) {
+    const customId = interaction.customId;
+    if (!customId.startsWith('poll_vote|')) return;
+
+    const [, pollId, optionIndex] = customId.split('|');
+    const poll = await client.db.get(pollId);
+    if (!poll || !Array.isArray(poll.options)) {
+      return interaction.reply({ content: 'This poll has expired or is unavailable.', ephemeral: true });
+    }
+
+    const index = Number(optionIndex);
+    if (Number.isNaN(index) || index < 0 || index >= poll.options.length) {
+      return interaction.reply({ content: 'Invalid poll option.', ephemeral: true });
+    }
+
+    poll.counts[index] = (poll.counts[index] || 0) + 1;
+    await client.db.set(pollId, poll);
+
+    const embed = new EmbedBuilder()
+      .setTitle('📊 Poll')
+      .setDescription(`**${poll.question}**`)
+      .addFields(poll.options.map((option, idx) => ({ name: `Option ${idx + 1}`, value: `${option} — ${poll.counts[idx]} votes`, inline: false })))
+      .setFooter({ text: 'Vote by clicking a button!' })
+      .setColor('Purple')
+      .setTimestamp();
+
+    await interaction.update({ embeds: [embed], components: interaction.message.components }).catch(() => {});
+    return;
+  }
+
   if (!interaction.isChatInputCommand()) return;
   const command = client.commands.get(interaction.commandName);
   if (!command) return;
