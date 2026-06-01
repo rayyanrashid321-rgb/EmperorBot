@@ -11,6 +11,6 @@ module.exports = {
     const encoded = encodeURIComponent(query);
     const url = `https://www.google.com/search?q=${encoded}`;
     return interaction.reply({ content: `🔎 Here is your search link:
-${url}`, ephemeral: false });
+${url}` });
   },
 };

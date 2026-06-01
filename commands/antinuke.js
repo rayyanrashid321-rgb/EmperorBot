@@ -80,6 +80,6 @@ module.exports = {
       return interaction.reply({ content: parts.join('\n'), flags: 64 });
     }
 
-    return interaction.reply({ content: 'Unknown subcommand.', ephemeral: true });
+    return interaction.reply({ content: 'Unknown subcommand.', flags: 64 });
   },
 };

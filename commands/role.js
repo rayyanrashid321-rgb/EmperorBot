@@ -27,39 +27,39 @@ module.exports = {
     const guild = interaction.guild;
 
     if (!guild) {
-      return interaction.reply({ content: 'This command can only be used inside a server.', ephemeral: true });
+      return interaction.reply({ content: 'This command can only be used inside a server.', flags: 64 });
     }
 
     const member = await guild.members.fetch(targetUser.id).catch(() => null);
     if (!member) {
-      return interaction.reply({ content: 'That user is not in this server.', ephemeral: true });
+      return interaction.reply({ content: 'That user is not in this server.', flags: 64 });
     }
 
     if (!role) {
-      return interaction.reply({ content: 'Role not found.', ephemeral: true });
+      return interaction.reply({ content: 'Role not found.', flags: 64 });
     }
 
     if (!guild.members.me.permissions.has(PermissionFlagsBits.ManageRoles)) {
-      return interaction.reply({ content: 'I need the Manage Roles permission to do that.', ephemeral: true });
+      return interaction.reply({ content: 'I need the Manage Roles permission to do that.', flags: 64 });
     }
 
     if (role.position >= guild.members.me.roles.highest.position) {
-      return interaction.reply({ content: 'I cannot manage that role because it is higher than or equal to my highest role.', ephemeral: true });
+      return interaction.reply({ content: 'I cannot manage that role because it is higher than or equal to my highest role.', flags: 64 });
     }
 
     try {
       if (sub === 'assign') {
         await member.roles.add(role);
-        return interaction.reply({ content: `✅ Added ${role} to ${targetUser.tag}.`, ephemeral: false });
+        return interaction.reply({ content: `✅ Added ${role} to ${targetUser.tag}.` });
       }
 
       if (sub === 'remove') {
         await member.roles.remove(role);
-        return interaction.reply({ content: `✅ Removed ${role} from ${targetUser.tag}.`, ephemeral: false });
+        return interaction.reply({ content: `✅ Removed ${role} from ${targetUser.tag}.` });
       }
     } catch (err) {
       console.error(err);
-      return interaction.reply({ content: 'I could not update that role. Check my permissions and role position.', ephemeral: true });
+      return interaction.reply({ content: 'I could not update that role. Check my permissions and role position.', flags: 64 });
     }
   },
 };

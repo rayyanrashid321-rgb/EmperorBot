@@ -44,6 +44,6 @@ module.exports = {
       return interaction.reply({ embeds: [embed] });
     }
 
-    return interaction.reply({ content: 'Unknown subcommand.', ephemeral: true });
+    return interaction.reply({ content: 'Unknown subcommand.', flags: 64 });
   },
 };

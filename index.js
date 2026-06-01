@@ -76,12 +76,12 @@ client.on('interactionCreate', async (interaction) => {
     const [, pollId, optionIndex] = customId.split('|');
     const poll = await client.db.get(pollId);
     if (!poll || !Array.isArray(poll.options)) {
-      return interaction.reply({ content: 'This poll has expired or is unavailable.', ephemeral: true });
+      return interaction.reply({ content: 'This poll has expired or is unavailable.', flags: 64 });
     }
 
     const index = Number(optionIndex);
     if (Number.isNaN(index) || index < 0 || index >= poll.options.length) {
-      return interaction.reply({ content: 'Invalid poll option.', ephemeral: true });
+      return interaction.reply({ content: 'Invalid poll option.', flags: 64 });
     }
 
     poll.counts[index] = (poll.counts[index] || 0) + 1;
@@ -107,23 +107,37 @@ client.on('interactionCreate', async (interaction) => {
   } catch (err) {
     console.error(err);
     if (interaction.replied || interaction.deferred) {
-      interaction.followUp({ content: 'There was an error executing this command.', ephemeral: true }).catch(() => {});
+      interaction.followUp({ content: 'There was an error executing this command.', flags: 64 }).catch(() => {});
     } else {
-      interaction.reply({ content: 'There was an error executing this command.', ephemeral: true }).catch(() => {});
+      interaction.reply({ content: 'There was an error executing this command.', flags: 64 }).catch(() => {});
     }
   }
 });
 
 // Load events
-const events = [
-  "ready", "guildBanAdd", "guildMemberRemove", 
-  "channelDelete", "channelCreate", "roleDelete", 
-  "roleCreate", "webhookCreate"
+const eventMappings = [
+  { name: 'clientReady', file: 'ready' },
+  { name: 'ready', file: 'ready' },
+  { name: 'guildBanAdd', file: 'guildBanAdd' },
+  { name: 'guildMemberRemove', file: 'guildMemberRemove' },
+  { name: 'channelDelete', file: 'channelDelete' },
+  { name: 'channelCreate', file: 'channelCreate' },
+  { name: 'roleDelete', file: 'roleDelete' },
+  { name: 'roleCreate', file: 'roleCreate' },
+  { name: 'webhookCreate', file: 'webhookCreate' },
 ];
 
-events.forEach(event => {
-  const handler = require(`./events/${event}`);
-  client.on(event, (...args) => handler(client, ...args));
+let readyHandled = false;
+
+eventMappings.forEach(({ name, file }) => {
+  const handler = require(`./events/${file}`);
+  client.on(name, (...args) => {
+    if (file === 'ready') {
+      if (readyHandled) return;
+      readyHandled = true;
+    }
+    handler(client, ...args);
+  });
 });
 
 client.login(process.env.TOKEN).catch(console.error);
