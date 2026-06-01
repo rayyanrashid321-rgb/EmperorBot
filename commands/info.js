@@ -36,12 +36,12 @@ module.exports = {
         );
       }
 
-      return interaction.reply({ embeds: [embed], ephemeral: false });
+      return interaction.reply({ embeds: [embed] });
     }
 
     if (sub === 'server') {
       if (!guild) {
-        return interaction.reply({ content: 'This command can only be used in a server.', ephemeral: true });
+        return interaction.reply({ content: 'This command can only be used in a server.', flags: 64 });
       }
       const embed = new EmbedBuilder()
         .setTitle(`${guild.name}`)
@@ -57,9 +57,9 @@ module.exports = {
         .setColor('Green')
         .setTimestamp();
 
-      return interaction.reply({ embeds: [embed], ephemeral: false });
+      return interaction.reply({ embeds: [embed] });
     }
 
-    return interaction.reply({ content: 'Unknown subcommand.', ephemeral: true });
+    return interaction.reply({ content: 'Unknown subcommand.', flags: 64 });
   },
 };

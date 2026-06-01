@@ -1,4 +1,16 @@
 require('dotenv').config();
+process.on('warning', (warning) => {
+  if (warning.name === 'DeprecationWarning' && warning.message.includes('The ready event has been renamed to clientReady')) {
+    return;
+  }
+  console.warn(warning);
+});
+process.on('warning', (warning) => {
+  if (warning.name === 'DeprecationWarning' && warning.message.includes('The ready event has been renamed to clientReady')) {
+    return;
+  }
+  console.warn(warning);
+});
 const fs = require('fs');
 const path = require('path');
 const { Client, GatewayIntentBits, Collection, EmbedBuilder } = require('discord.js');
